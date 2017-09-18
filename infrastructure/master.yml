@@ -16,7 +16,7 @@ Resources:
     VPC:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/sciam-dev-cf-templates/infrastructure/vpc.yaml
+            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/infrastructure/vpc.yaml
             Parameters:
                 EnvironmentName:    !Ref AWS::StackName
                 VpcCIDR:            10.180.0.0/16
@@ -28,7 +28,7 @@ Resources:
     SecurityGroups:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/sciam-dev-cf-templates/infrastructure/security-groups.yaml
+            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/infrastructure/security-groups.yaml
             Parameters: 
                 EnvironmentName: !Ref AWS::StackName
                 VPC: !GetAtt VPC.Outputs.VPC
@@ -36,7 +36,7 @@ Resources:
     ALB:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/sciam-dev-cf-templates/infrastructure/load-balancers.yaml
+            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/infrastructure/load-balancers.yaml
             Parameters:
                 EnvironmentName: !Ref AWS::StackName
                 VPC: !GetAtt VPC.Outputs.VPC
@@ -46,7 +46,7 @@ Resources:
     ECS:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/sciam-dev-cf-templates/infrastructure/ecs-cluster.yaml
+            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/infrastructure/ecs-cluster.yaml
             Parameters:
                 EnvironmentName: !Ref AWS::StackName
                 InstanceType: t2.micro
@@ -58,7 +58,7 @@ Resources:
     NginxService:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/sciam-dev-cf-templates/services/nginx-service/service.yaml
+            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/services/nginx/service.yaml
             Parameters:
                 VPC: !GetAtt VPC.Outputs.VPC
                 Cluster: !GetAtt ECS.Outputs.Cluster
@@ -69,7 +69,7 @@ Resources:
     NodeService:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/sciam-dev-cf-templates/services/node-service/service.yaml
+            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/services/node/service.yaml
             Parameters:
                 VPC: !GetAtt VPC.Outputs.VPC
                 Cluster: !GetAtt ECS.Outputs.Cluster
