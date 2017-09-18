@@ -55,17 +55,6 @@ Resources:
                 SecurityGroup: !GetAtt SecurityGroups.Outputs.ECSHostSecurityGroup
                 Subnets: !GetAtt VPC.Outputs.PrivateSubnets
 
-    NginxService:
-        Type: AWS::CloudFormation::Stack
-        Properties:
-            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/services/nginx/service.yml
-            Parameters:
-                VPC: !GetAtt VPC.Outputs.VPC
-                Cluster: !GetAtt ECS.Outputs.Cluster
-                DesiredCount: 3
-                Listener: !GetAtt ALB.Outputs.Listener 
-                Path: /nginx
-
     NodeService:
         Type: AWS::CloudFormation::Stack
         Properties:
@@ -74,17 +63,27 @@ Resources:
                 VPC: !GetAtt VPC.Outputs.VPC
                 Cluster: !GetAtt ECS.Outputs.Cluster
                 DesiredCount: 3
-                NginxServiceUrl: !Join [ "/", [ !GetAtt ALB.Outputs.LoadBalancerUrl, "nginx" ]]
                 Listener: !GetAtt ALB.Outputs.Listener 
-                Path: /
+                Path: /node
+
+    ApiService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/services/api/service.yml
+            Parameters:
+                VPC: !GetAtt VPC.Outputs.VPC
+                Cluster: !GetAtt ECS.Outputs.Cluster
+                DesiredCount: 3
+                Listener: !GetAtt ALB.Outputs.Listener 
+                Path: /api
 
 
 Outputs:
 
-    NginxServiceUrl: 
-        Description: The URL endpoint for the nginx service
-        Value: !Join [ "/", [ !GetAtt ALB.Outputs.LoadBalancerUrl, "nginx" ]]
-
     NodeServiceUrl: 
         Description: The URL endpoint for the node service
-        Value: !Join ["", [ !GetAtt ALB.Outputs.LoadBalancerUrl, "/" ]]
+        Value: !Join [ "/", [ !GetAtt ALB.Outputs.LoadBalancerUrl, "node" ]]
+
+    ApiServiceUrl: 
+        Description: The URL endpoint for the api service
+        Value: !Join [ "/", [ !GetAtt ALB.Outputs.LoadBalancerUrl, "api" ]]

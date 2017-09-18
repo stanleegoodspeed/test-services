@@ -1,5 +1,5 @@
 Description: >
-    This is an example of a long running ECS service that serves a JSON API of nginx.
+    This is an example of a long running ECS service that serves a JSON API
 
 Parameters: 
 
@@ -22,7 +22,7 @@ Parameters:
     Path: 
         Description: The path to register with the Application Load Balancer
         Type: String
-        Default: /nginx
+        Default: /api
 
 Resources:
 
@@ -35,21 +35,21 @@ Resources:
             DesiredCount: !Ref DesiredCount
             TaskDefinition: !Ref TaskDefinition
             LoadBalancers: 
-                - ContainerName: "nginx-service"
-                  ContainerPort: 8001
+                - ContainerName: "api-service"
+                  ContainerPort: 4000
                   TargetGroupArn: !Ref TargetGroup
 
     TaskDefinition:
         Type: AWS::ECS::TaskDefinition
         Properties:
-            Family: nginx-service
+            Family: api-service
             ContainerDefinitions:
-                - Name: nginx-service
+                - Name: api-service
                   Essential: true
-                  Image: 132906654537.dkr.ecr.us-east-1.amazonaws.com/nginx:1.0.0
+                  Image: 132906654537.dkr.ecr.us-east-1.amazonaws.com/api:1.0.0
                   Memory: 128
                   PortMappings:
-                    - ContainerPort: 8001
+                    - ContainerPort: 4000
                   LogConfiguration:
                     LogDriver: awslogs
                     Options:
@@ -71,7 +71,7 @@ Resources:
             Matcher: 
                 HttpCode: 200-299
             HealthCheckIntervalSeconds: 10
-            HealthCheckPath: /nginx
+            HealthCheckPath: /api
             HealthCheckProtocol: HTTP
             HealthCheckTimeoutSeconds: 5
             HealthyThresholdCount: 2
