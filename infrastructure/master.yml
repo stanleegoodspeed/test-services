@@ -58,7 +58,7 @@ Resources:
     NginxService:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/services/nginx/service.yaml
+            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/services/nginx/service.yml
             Parameters:
                 VPC: !GetAtt VPC.Outputs.VPC
                 Cluster: !GetAtt ECS.Outputs.Cluster
@@ -69,7 +69,7 @@ Resources:
     NodeService:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/services/node/service.yaml
+            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/services/node/service.yml
             Parameters:
                 VPC: !GetAtt VPC.Outputs.VPC
                 Cluster: !GetAtt ECS.Outputs.Cluster
