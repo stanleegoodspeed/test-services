@@ -30,14 +30,14 @@ Parameters:
     Description: The OAuth token for the repo
     Type: String
   InfrastructureTemplate:
-    Default: master.yml
+    Default: infrastructure/master.yml
     Description: The file name of the template
     Type: String
   StackName:
     Description: A name for the test stack
     Type: String
   StackConfig:
-    Default: config.json
+    Default: infrastructure/config.json
     Description: The configuration file name for the stack
     Type: String
   ChangeSetName:
@@ -63,9 +63,10 @@ Metadata:
       - Label:
           default: "Stack Settings"
         Parameters:
-          - InfrastructureTemplate
+          - StackName
           - StackConfig
-
+          - InfrastructureTemplate
+          
 Resources:
   ArtifactStoreBucket:
     Type: AWS::S3::Bucket
