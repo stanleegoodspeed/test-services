@@ -91,7 +91,7 @@ Resources:
       Name: !Ref 'PipelineName'
       RoleArn: !GetAtt [PipelineRole, Arn]
       Stages:
-        - Name: SourceArtifact
+        - Name: Source
           Actions:
             - Name: GitHub
               ActionTypeId:
