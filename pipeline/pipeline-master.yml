@@ -127,16 +127,6 @@ Resources:
                 TemplatePath: !Sub "SourceArtifact::${InfrastructureTemplate}"
                 Capabilities: CAPABILITY_NAMED_IAM
               RunOrder: '1'
-            - Name: ApproveChangeSet
-              ActionTypeId:
-                Category: Approval
-                Owner: AWS
-                Provider: Manual
-                Version: '1'
-              Configuration:
-                NotificationArn: !Ref CodePipelineSNSTopic
-                CustomData: !Sub 'A new change set was created for the ${StackName} stack. Do you want to implement the changes?'
-              RunOrder: '2'
             - Name: ExecuteChangeSet
               ActionTypeId:
                 Category: Deploy
@@ -149,7 +139,7 @@ Resources:
                 RoleArn: !GetAtt [CFNRole, Arn]
                 StackName: !Ref StackName
                 Capabilities: CAPABILITY_NAMED_IAM
-              RunOrder: '3'
+              RunOrder: '2'
   CFNRole:
     Type: AWS::IAM::Role
     Properties:
