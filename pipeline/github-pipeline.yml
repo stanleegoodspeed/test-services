@@ -13,62 +13,83 @@ Parameters:
   PipelineName:
     Description: A name for pipeline
     Type: String
-  ArtifactS3Bucket:
-    Description: An existing bucket to store artifacts
-    Type: String
   GithubOwner:
     Default: stanleegoodspeed
     Description: The owner of the repo that contains the source artifact
     Type: String
   GithubRepo:
+    Default: aws-pipeline
     Description: The name of the repo that contains the source artifact
     Type: String
   GithubBranch:
+    Default: master
     Description: The branch within the repo
     Type: String
-  GithubOAuthToken:
-    Description: The OAuth token for the repo
-    Type: String
-  InfrastructureTemplate:
-    Default: infrastructure/master.yml
+  TemplateFileName:
+    Default: master.yml
     Description: The file name of the template
     Type: String
-  StackName:
+  TestStackName:
+    Default: test-site
     Description: A name for the test stack
     Type: String
-  StackConfig:
-    Description: The configuration file name for the stack
+  TestStackConfig:
+    Default: test-configuration.json
+    Description: The configuration file name for the test stack
+    Type: String
+  ProdStackName:
+    Default: prod-site
+    Description: A name for the production stack
+    Type: String
+  ProdStackConfig:
+    Default: prod-configuration.json
+    Description: The configuration file name for the production stack
     Type: String
   ChangeSetName:
-    Description: A name for the change set
+    Default: changeset-site
+    Description: A name for the production WordPress stack change set
+    Type: String
+  Email:
+    Description: The email address where CodePipeline sends pipeline notifications and stuff
     Type: String
 
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: "Source Settings"
+          default: "CodePipeline Settings"
         Parameters:
           - PipelineName
-          - ArtifactS3Bucket
           - GithubOwner
           - GithubRepo
           - GithubBranch
-          - GithubOAuthToken
+          - Email
       - Label:
-          default: "Stack Settings"
+          default: "Test Stack Settings"
         Parameters:
-          - StackName
-          - StackConfig
+          - TestStackName
+          - TemplateFileName
+          - TestStackConfig
+      - Label:
+          default: "Production Stack Settings"
+        Parameters:
           - ChangeSetName
-          - InfrastructureTemplate
-          
+          - ProdStackName
+          - ProdStackConfig
+
 Resources:
   ArtifactStoreBucket:
     Type: AWS::S3::Bucket
     Properties:
       VersioningConfiguration:
         Status: Enabled
+
+  CodePipelineSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref Email
+          Protocol: email
 
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -82,22 +103,22 @@ Resources:
       Stages:
         - Name: Source
           Actions:
-            - Name: GitHub
+            - Name: SourceArtifact
               ActionTypeId:
                 Category: Source
                 Owner: ThirdParty
-                Provider: GitHub
-                Version: 1
+                Provider: Github
+                Version: '1'
               Configuration:
                 Owner: !Ref 'GithubOwner'
                 Repo: !Ref 'GithubRepo'
                 Branch: !Ref 'GithubBranch'
-                OAuthToken: !Ref 'GithubOAuthToken'
                 PollForSourceChanges: 'true'
+                OAuthToken: '5ee2fe8073552a0818dcd475b1e1e3f940af5b83'
               OutputArtifacts:
                 - Name: SourceArtifact
               RunOrder: '1'
-        - Name: !Ref 'StackName'
+        - Name: Test
           Actions:
             - Name: CreateStack
               ActionTypeId:
@@ -110,12 +131,74 @@ Resources:
               Configuration:
                 ActionMode: REPLACE_ON_FAILURE
                 RoleArn: !GetAtt [CFNRole, Arn]
-                StackName: !Ref StackName
-                TemplateConfiguration: !Sub "SourceArtifact::${StackConfig}"
-                TemplatePath: !Sub "SourceArtifact::${InfrastructureTemplate}"
+                StackName: !Ref TestStackName
+                TemplateConfiguration: !Sub "SourceArtifact::${TestStackConfig}"
+                TemplatePath: !Sub "SourceArtifact::${TemplateFileName}"
                 Capabilities: CAPABILITY_NAMED_IAM
               RunOrder: '1'
-
+            - Name: ApproveTestStack
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: '1'
+              Configuration:
+                NotificationArn: !Ref CodePipelineSNSTopic
+                CustomData: !Sub 'Do you want to create a change set against the production stack and delete the ${TestStackName} stack?'
+              RunOrder: '2'
+            - Name: DeleteTestStack
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: '1'
+              Configuration:
+                ActionMode: DELETE_ONLY
+                RoleArn: !GetAtt [CFNRole, Arn]
+                StackName: !Ref TestStackName
+              RunOrder: '3'
+        - Name: ProdStage
+          Actions:
+            - Name: CreateChangeSet
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: '1'
+              InputArtifacts:
+                - Name: SourceArtifact
+              Configuration:
+                ActionMode: CHANGE_SET_REPLACE
+                RoleArn: !GetAtt [CFNRole, Arn]
+                StackName: !Ref ProdStackName
+                ChangeSetName: !Ref ChangeSetName
+                TemplateConfiguration: !Sub "SourceArtifact::${ProdStackConfig}"
+                TemplatePath: !Sub "SourceArtifact::${TemplateFileName}"
+                Capabilities: CAPABILITY_NAMED_IAM
+              RunOrder: '1'
+            - Name: ApproveChangeSet
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: '1'
+              Configuration:
+                NotificationArn: !Ref CodePipelineSNSTopic
+                CustomData: !Sub 'A new change set was created for the ${ProdStackName} stack. Do you want to implement the changes?'
+              RunOrder: '2'
+            - Name: ExecuteChangeSet
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: '1'
+              Configuration:
+                ActionMode: CHANGE_SET_EXECUTE
+                ChangeSetName: !Ref ChangeSetName
+                RoleArn: !GetAtt [CFNRole, Arn]
+                StackName: !Ref ProdStackName
+                Capabilities: CAPABILITY_NAMED_IAM
+              RunOrder: '3'
   CFNRole:
     Type: AWS::IAM::Role
     Properties:

@@ -13,9 +13,6 @@ Parameters:
   PipelineName:
     Description: A name for pipeline
     Type: String
-  ArtifactS3Bucket:
-    Description: An existing bucket to store artifacts
-    Type: String
   GithubOwner:
     Default: stanleegoodspeed
     Description: The owner of the repo that contains the source artifact
@@ -27,30 +24,28 @@ Parameters:
     Description: The branch within the repo
     Type: String
   GithubOAuthToken:
-    Description: The OAuth token for the repo
+    Description: The branch within the repo
     Type: String
-  InfrastructureTemplate:
-    Default: infrastructure/master.yml
+  TemplateFileName:
+    Default: master.yml
     Description: The file name of the template
     Type: String
-  StackName:
+  TestStackName:
+    Default: test-site
     Description: A name for the test stack
     Type: String
-  StackConfig:
-    Description: The configuration file name for the stack
-    Type: String
-  ChangeSetName:
-    Description: A name for the change set
+  TestStackConfig:
+    Default: test-configuration.json
+    Description: The configuration file name for the test stack
     Type: String
 
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: "Source Settings"
+          default: "CodePipeline Settings"
         Parameters:
           - PipelineName
-          - ArtifactS3Bucket
           - GithubOwner
           - GithubRepo
           - GithubBranch
@@ -58,11 +53,10 @@ Metadata:
       - Label:
           default: "Stack Settings"
         Parameters:
-          - StackName
-          - StackConfig
-          - ChangeSetName
-          - InfrastructureTemplate
-          
+          - TestStackName
+          - TemplateFileName
+          - TestStackConfig
+
 Resources:
   ArtifactStoreBucket:
     Type: AWS::S3::Bucket
@@ -82,11 +76,11 @@ Resources:
       Stages:
         - Name: Source
           Actions:
-            - Name: GitHub
+            - Name: SourceArtifact
               ActionTypeId:
                 Category: Source
                 Owner: ThirdParty
-                Provider: GitHub
+                Provider: Github
                 Version: 1
               Configuration:
                 Owner: !Ref 'GithubOwner'
@@ -97,7 +91,7 @@ Resources:
               OutputArtifacts:
                 - Name: SourceArtifact
               RunOrder: '1'
-        - Name: !Ref 'StackName'
+        - Name: Test
           Actions:
             - Name: CreateStack
               ActionTypeId:
@@ -110,9 +104,9 @@ Resources:
               Configuration:
                 ActionMode: REPLACE_ON_FAILURE
                 RoleArn: !GetAtt [CFNRole, Arn]
-                StackName: !Ref StackName
-                TemplateConfiguration: !Sub "SourceArtifact::${StackConfig}"
-                TemplatePath: !Sub "SourceArtifact::${InfrastructureTemplate}"
+                StackName: !Ref TestStackName
+                TemplateConfiguration: !Sub "SourceArtifact::${TestStackConfig}"
+                TemplatePath: !Sub "SourceArtifact::${TemplateFileName}"
                 Capabilities: CAPABILITY_NAMED_IAM
               RunOrder: '1'
 
