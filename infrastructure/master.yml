@@ -55,17 +55,6 @@ Resources:
                 SecurityGroup: !GetAtt SecurityGroups.Outputs.ECSHostSecurityGroup
                 Subnets: !GetAtt VPC.Outputs.PrivateSubnets
 
-    NodeService:
-        Type: AWS::CloudFormation::Stack
-        Properties:
-            TemplateURL: https://s3.amazonaws.com/sciam-dev-infrastructure-templates/services/node/service.yml
-            Parameters:
-                VPC: !GetAtt VPC.Outputs.VPC
-                Cluster: !GetAtt ECS.Outputs.Cluster
-                DesiredCount: 3
-                Listener: !GetAtt ALB.Outputs.Listener 
-                Path: /node
-
     ApiService:
         Type: AWS::CloudFormation::Stack
         Properties:
@@ -79,10 +68,6 @@ Resources:
 
 
 Outputs:
-
-    NodeServiceUrl: 
-        Description: The URL endpoint for the node service
-        Value: !Join [ "/", [ !GetAtt ALB.Outputs.LoadBalancerUrl, "node" ]]
 
     ApiServiceUrl: 
         Description: The URL endpoint for the api service

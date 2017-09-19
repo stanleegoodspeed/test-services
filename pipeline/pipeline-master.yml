@@ -37,7 +37,6 @@ Parameters:
     Description: A name for the test stack
     Type: String
   StackConfig:
-    Default: infrastructure/config.json
     Description: The configuration file name for the stack
     Type: String
   ChangeSetName:
@@ -65,6 +64,7 @@ Metadata:
         Parameters:
           - StackName
           - StackConfig
+          - ChangeSetName
           - InfrastructureTemplate
           
 Resources:
