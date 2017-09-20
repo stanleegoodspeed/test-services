@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 app.get('/api', function (req, res) {
-	res.send('Response from API request')
+	res.send('Response from API request - COOL')
 })
   
 app.listen(4000, function () {
