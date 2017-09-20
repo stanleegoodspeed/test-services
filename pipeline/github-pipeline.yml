@@ -18,7 +18,7 @@ Parameters:
     Description: The owner of the repo that contains the source artifact
     Type: String
   GithubRepo:
-    Default: aws-pipeline
+    Default: test-services
     Description: The name of the repo that contains the source artifact
     Type: String
   GithubBranch:
@@ -26,7 +26,7 @@ Parameters:
     Description: The branch within the repo
     Type: String
   TemplateFileName:
-    Default: master.yml
+    Default: infrastructure/master.yml
     Description: The file name of the template
     Type: String
   TestStackName:
@@ -34,7 +34,7 @@ Parameters:
     Description: A name for the test stack
     Type: String
   TestStackConfig:
-    Default: test-configuration.json
+    Default: infrastructure/test-config.json
     Description: The configuration file name for the test stack
     Type: String
   ProdStackName:
@@ -42,7 +42,7 @@ Parameters:
     Description: A name for the production stack
     Type: String
   ProdStackConfig:
-    Default: prod-configuration.json
+    Default: infrastructure/prod-config.json
     Description: The configuration file name for the production stack
     Type: String
   ChangeSetName:
@@ -114,7 +114,7 @@ Resources:
                 Repo: !Ref 'GithubRepo'
                 Branch: !Ref 'GithubBranch'
                 PollForSourceChanges: 'true'
-                OAuthToken: '5ee2fe8073552a0818dcd475b1e1e3f940af5b83'
+                OAuthToken: 5ee2fe8073552a0818dcd475b1e1e3f940af5b83
               OutputArtifacts:
                 - Name: SourceArtifact
               RunOrder: '1'
